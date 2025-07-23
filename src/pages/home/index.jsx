@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { NavbarContext } from "../../context";
 import Monkey3d from "./Monkey";
@@ -16,46 +16,44 @@ const positions = [
   {
     name: "Vietnamese-Japanese Interpreter",
     color: "#164950ff",
-    className: "first",
   },
   {
     name: "BRSE",
     color: "#8133b4ff",
-    className: "second",
   },
   {
-    name: "namnd",
-    color: "#709c52ff",
-    className: "third",
+    name: "hello world",
+    color: "#f08d49ff",
   },
 ];
 
 const Home = () => {
-  const { ref, inView } = useInView({
-    threshold: 1,
-  });
-
+  const { ref, inView } = useInView({ threshold: 1 });
   const setPage = useContext(NavbarContext);
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   useEffect(() => {
-    if (inView) {
-      setPage("home");
-    }
+    if (inView) setPage("home");
   }, [inView, setPage]);
 
-  const produceSpans = (name) => {
-    return name.split("").map((letter, index) => (
-      <AnimatedSpan
-        index={index}
-        letter={letter}
-        aria-hidden="true"
-        key={index}
-      >
+  // Vòng lặp qua từng vị trí mỗi 3 giây
+useEffect(() => {
+  const timeouts = [3000, 3000, 3000]; // thời gian cho từng dòng (ms)
+  const timeout = setTimeout(() => {
+    setCurrentIndex((prev) => (prev + 1) % positions.length);
+  }, timeouts[currentIndex]);
+
+  return () => clearTimeout(timeout);
+}, [currentIndex]);
+
+  const produceSpans = (name) =>
+    name.split("").map((letter, index) => (
+      <AnimatedSpan index={index} letter={letter} aria-hidden="true" key={index}>
         {letter}
       </AnimatedSpan>
     ));
-  };
-  
+
   return (
     <HomeWrapper ref={ref} id="home-page">
       <TextContainer>
@@ -64,10 +62,14 @@ const Home = () => {
           {positions.map((position, index) => (
             <div
               key={index}
-              data-index={index}
-              className={`text ${position.className}`}
+              className="text"
+              style={{
+                position: index === currentIndex ? "relative" : "absolute",
+                opacity: index === currentIndex ? 1 : 0,
+                transition: "opacity 0.6s ease",
+                color: position.color,
+              }}
               aria-label={position.name}
-              style={{ color: position.color }}
             >
               {produceSpans(position.name)}
             </div>
